@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react'
 import { useChatMessages } from '@/hooks/useChat'
 import { MessageBubble } from './MessageBubble'
 import { MessageInput } from './MessageInput'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { ChatSkeleton } from './ChatSkeleton'
+import { EmptyState } from '@/components/layout/EmptyState'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface ChatWindowProps {
   sessionId: string
@@ -31,7 +32,10 @@ export function ChatWindow({ sessionId, active }: ChatWindowProps) {
         {isLoading && <ChatSkeleton />}
 
         {!isLoading && messages.length === 0 && (
-          <p className="text-center text-muted-foreground">Nenhuma mensagem ainda.</p>
+          <EmptyState
+            title="Nenhuma mensagem"
+            description="Envie a primeira mensagem para iniciar a conversa."
+          />
         )}
 
         <div className="space-y-3">

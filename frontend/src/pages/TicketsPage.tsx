@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { useMyTickets, useTicketList } from '@/hooks/useTickets'
 import { TicketCard } from '@/components/ticket/TicketCard'
-import { Button } from '@/components/ui/button'
-import { useNavigate } from 'react-router-dom'
-import { ALL_STATUSES, STATUS_LABELS } from '@/lib/constants'
+import { TicketListSkeleton } from '@/components/ticket/TicketSkeleton'
 import { EmptyState } from '@/components/layout/EmptyState'
+import { Button } from '@/components/ui/button'
+import { STATUS_LABELS, ALL_STATUSES } from '@/lib/constants'
 
 export function TicketsPage() {
   const navigate = useNavigate()
@@ -30,6 +31,13 @@ export function TicketsPage() {
 
       {isAgent && (
         <div className="flex gap-2 flex-wrap">
+          <Button
+            variant={statusFilter === '' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => { setStatusFilter(''); setPage(0) }}
+          >
+            Todos
+          </Button>
           {ALL_STATUSES.map((s) => (
             <Button
               key={s}
@@ -43,20 +51,27 @@ export function TicketsPage() {
         </div>
       )}
 
-      {query.isLoading && <p className="text-muted-foreground">Carregando...</p>}
+      {query.isLoading && <TicketListSkeleton count={5} />}
 
-      {tickets?.content.length === 0 && !query.isLoading && (
+      {!query.isLoading && tickets?.content.length === 0 && (
         <EmptyState
-          title="Nenhum resultado"
-          description="Tente ajustar os filtros para encontrar o que procura."
+          title={isAgent ? 'Nenhum ticket encontrado' : 'Você não tem tickets'}
+          description={
+            isAgent
+              ? 'Tente ajustar os filtros ou aguarde novos tickets.'
+              : 'Crie seu primeiro ticket para receber atendimento.'
+          }
+          action={!isAgent ? { label: 'Criar ticket', onClick: () => navigate('/tickets/new') } : undefined}
         />
       )}
 
-      <div className="space-y-3">
-        {tickets?.content.map((ticket) => (
-          <TicketCard key={ticket.id} ticket={ticket} />
-        ))}
-      </div>
+      {tickets && tickets.content.length > 0 && (
+        <div className="space-y-3">
+          {tickets.content.map((ticket) => (
+            <TicketCard key={ticket.id} ticket={ticket} />
+          ))}
+        </div>
+      )}
 
       {tickets && tickets.totalPages > 1 && (
         <div className="flex gap-2 justify-center">
