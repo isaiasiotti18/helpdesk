@@ -30,13 +30,23 @@ public class ChatWebSocketHandler {
         UUID senderId = UUID.fromString(principal.getName());
         UUID sessionId = UUID.fromString(payload.sessionId());
 
-        log.debug("Message from {} to session {}", senderId, sessionId);
-
         MessageResponse response = chatMessageService.sendAsync(sessionId, senderId, payload.content());
 
-        // Broadcast para todos inscritos na sessão
         messagingTemplate.convertAndSend(
                 "/topic/chat." + payload.sessionId(),
+                response);
+    }
+
+    @MessageMapping("chat.note")
+    public void handleNote(ChatMessagePayload payload, Principal principal) {
+        UUID senderId = UUID.fromString(principal.getName());
+        UUID sessionId = UUID.fromString(payload.sessionId());
+
+        MessageResponse response = chatMessageService.sendNote(sessionId, senderId, payload.content());
+
+        // Broadcast só no canal de notas internas (agentes subscrevem neste tópico)
+        messagingTemplate.convertAndSend(
+                "/topic/chat." + payload.sessionId() + ".notes",
                 response);
     }
 }

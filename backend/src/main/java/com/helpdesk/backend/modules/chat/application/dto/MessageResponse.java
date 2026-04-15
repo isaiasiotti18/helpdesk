@@ -11,7 +11,8 @@ public record MessageResponse(
         String senderName,
         String content,
         String messageType,
-        LocalDateTime sentAt) {
+        LocalDateTime sentAt,
+        Boolean isInternal) {
     public static MessageResponse from(Message m) {
         return new MessageResponse(
                 m.getId().toString(),
@@ -20,6 +21,7 @@ public record MessageResponse(
                 m.getSender().getName(),
                 m.getContent(),
                 m.getMessageType().name(),
-                m.getSentAt());
+                m.getSentAt(),
+                m.getIsInternal());
     }
 }

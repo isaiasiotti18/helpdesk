@@ -53,4 +53,8 @@ public class Message {
     @Column(name = "sent_at", nullable = false)
     @Builder.Default
     private LocalDateTime sentAt = LocalDateTime.now();
+
+    @Column(name = "is_internal", nullable = false)
+    @Builder.Default
+    private Boolean isInternal = false;
 }

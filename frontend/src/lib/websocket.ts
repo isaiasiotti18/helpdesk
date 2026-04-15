@@ -52,6 +52,30 @@ export function sendMessage(sessionId: string, content: string) {
   })
 }
 
+export function sendNote(sessionId: string, content: string) {
+  if (!stompClient?.active) {
+    console.warn('STOMP not connected')
+    return
+  }
+
+  stompClient.publish({
+    destination: '/app/chat.note',
+    body: JSON.stringify({ sessionId, content }),
+  })
+}
+
+export function subscribeToNotes(
+  sessionId: string,
+  callback: (message: IMessage) => void
+) {
+  if (!stompClient?.active) {
+    console.warn('STOMP not connected')
+    return null
+  }
+
+  return stompClient.subscribe(`/topic/chat.${sessionId}.notes`, callback)
+}
+
 export function disconnectWebSocket() {
   if (stompClient?.active) {
     stompClient.deactivate()

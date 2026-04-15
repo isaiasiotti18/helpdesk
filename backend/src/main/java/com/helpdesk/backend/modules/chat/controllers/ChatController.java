@@ -3,6 +3,7 @@ package com.helpdesk.backend.modules.chat.controllers;
 import com.helpdesk.backend.modules.chat.application.dto.ChatSessionResponse;
 import com.helpdesk.backend.modules.chat.application.dto.MessageResponse;
 import com.helpdesk.backend.modules.chat.application.dto.SendMessageRequest;
+import com.helpdesk.backend.modules.chat.application.dto.SendNoteRequest;
 import com.helpdesk.backend.modules.chat.application.services.ChatMessageService;
 import com.helpdesk.backend.modules.chat.application.services.ChatSessionService;
 import com.helpdesk.backend.shared.dto.ApiResponse;
@@ -15,6 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -52,11 +54,13 @@ public class ChatController {
         return ResponseEntity.noContent().build();
     }
 
+    // Alterar getMessages para incluir flag
     @GetMapping("/sessions/{sessionId}/messages")
     public ResponseEntity<ApiResponse<Page<MessageResponse>>> getMessages(
             @PathVariable UUID sessionId,
+            @RequestParam(defaultValue = "false") boolean includeInternal,
             @PageableDefault(size = 50) Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.ok(chatMessageService.getMessages(sessionId, pageable)));
+        return ResponseEntity.ok(ApiResponse.ok(chatMessageService.getMessages(sessionId, includeInternal, pageable)));
     }
 
     @PostMapping("/messages")
@@ -70,7 +74,17 @@ public class ChatController {
     @GetMapping("/sessions/{sessionId}/messages/cursor")
     public ResponseEntity<ApiResponse<List<MessageResponse>>> getMessagesCursor(
             @PathVariable UUID sessionId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime before) {
-        return ResponseEntity.ok(ApiResponse.ok(chatMessageService.getMessagesCursor(sessionId, before)));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime before,
+            @RequestParam(defaultValue = "false") boolean includeInternal) {
+        return ResponseEntity.ok(ApiResponse.ok(chatMessageService.getMessagesCursor(sessionId, before, includeInternal)));
+    }
+
+    @PostMapping("/notes")
+    @PreAuthorize("hasAnyRole('AGENT', 'ADMIN')")
+    public ResponseEntity<ApiResponse<MessageResponse>> sendNote(
+            @Valid @RequestBody SendNoteRequest request,
+            @CurrentUser UUID senderId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.ok(chatMessageService.sendNote(request.sessionId(), senderId, request.content())));
     }
 }

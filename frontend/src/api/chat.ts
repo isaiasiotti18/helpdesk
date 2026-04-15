@@ -34,3 +34,11 @@ export async function sendMessageRest(sessionId: string, content: string) {
   })
   return data.data
 }
+
+export async function sendNoteRest(sessionId: string, content: string) {
+  const { data } = await api.post<ApiResponse<Message>>('/chat/notes', {
+    sessionId,
+    content,
+  })
+  return data.data
+}

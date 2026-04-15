@@ -9,11 +9,22 @@ import java.util.List;
 import java.util.UUID;
 
 public interface MessageRepository extends JpaRepository<Message, UUID> {
-    Page<Message> findBySessionIdOrderBySentAtAsc(UUID sessionId, Pageable pageable);
 
     // Cursor-based: mensagens antes de um timestamp
     List<Message> findTop50BySessionIdAndSentAtBeforeOrderBySentAtDesc(UUID sessionId, LocalDateTime before);
 
     // Mensagens mais recentes (primeira carga)
     List<Message> findTop50BySessionIdOrderBySentAtDesc(UUID sessionId);
+
+    // Mensagens visíveis pro cliente (exclui internas)
+    Page<Message> findBySessionIdAndIsInternalFalseOrderBySentAtAsc(UUID sessionId, Pageable pageable);
+
+    // Todas as mensagens (agente vê tudo)
+    Page<Message> findBySessionIdOrderBySentAtAsc(UUID sessionId, Pageable pageable);
+
+    // Cursor-based sem internas
+    List<Message> findTop50BySessionIdAndIsInternalFalseAndSentAtBeforeOrderBySentAtDesc(UUID sessionId,
+            LocalDateTime before);
+
+    List<Message> findTop50BySessionIdAndIsInternalFalseOrderBySentAtDesc(UUID sessionId);
 }

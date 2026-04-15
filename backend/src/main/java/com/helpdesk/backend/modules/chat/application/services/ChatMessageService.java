@@ -2,6 +2,8 @@ package com.helpdesk.backend.modules.chat.application.services;
 
 import com.helpdesk.backend.modules.chat.application.dto.MessageResponse;
 import com.helpdesk.backend.modules.chat.domain.*;
+import com.helpdesk.backend.modules.ticket.application.services.SlaService;
+import com.helpdesk.backend.modules.user.domain.Role;
 import com.helpdesk.backend.modules.user.domain.User;
 import com.helpdesk.backend.modules.user.domain.UserRepository;
 import com.helpdesk.backend.shared.exception.BusinessException;
@@ -24,6 +26,7 @@ public class ChatMessageService {
     private final ChatSessionRepository chatSessionRepository;
     private final UserRepository userRepository;
     private final AsyncMessagePersistence asyncPersistence;
+    private final SlaService slaService;
 
     /**
      * Persiste mensagem de forma assíncrona e retorna o DTO imediatamente.
@@ -49,6 +52,10 @@ public class ChatMessageService {
 
         // Persiste async — não bloqueia o WebSocket
         asyncPersistence.persist(message);
+
+        if (sender.getRole() == Role.AGENT) {
+            slaService.recordFirstResponse(session.getTicket().getId());
+        }
 
         return MessageResponse.from(message);
     }
@@ -77,28 +84,71 @@ public class ChatMessageService {
                 .build();
 
         message = messageRepository.save(message);
+
+        if (sender.getRole() == Role.AGENT) {
+            slaService.recordFirstResponse(session.getTicket().getId());
+        }
+
         return MessageResponse.from(message);
     }
 
+    // Alterar getMessages para receber flag
     @Transactional(readOnly = true)
-    public Page<MessageResponse> getMessages(UUID sessionId, Pageable pageable) {
-        return messageRepository.findBySessionIdOrderBySentAtAsc(sessionId, pageable)
-                .map(MessageResponse::from);
+    public Page<MessageResponse> getMessages(UUID sessionId, boolean includeInternal, Pageable pageable) {
+        Page<Message> messages;
+        if (includeInternal) {
+            messages = messageRepository.findBySessionIdOrderBySentAtAsc(sessionId, pageable);
+        } else {
+            messages = messageRepository.findBySessionIdAndIsInternalFalseOrderBySentAtAsc(sessionId, pageable);
+        }
+        return messages.map(MessageResponse::from);
     }
 
+    // Alterar getMessagesCursor para receber flag
     @Transactional(readOnly = true)
-    public List<MessageResponse> getMessagesCursor(UUID sessionId, LocalDateTime before) {
+    public List<MessageResponse> getMessagesCursor(UUID sessionId, LocalDateTime before, boolean includeInternal) {
         List<Message> messages;
-
-        if (before != null) {
-            messages = messageRepository.findTop50BySessionIdAndSentAtBeforeOrderBySentAtDesc(sessionId,
-                    before);
+        if (includeInternal) {
+            if (before != null) {
+                messages = messageRepository.findTop50BySessionIdAndSentAtBeforeOrderBySentAtDesc(sessionId, before);
+            } else {
+                messages = messageRepository.findTop50BySessionIdOrderBySentAtDesc(sessionId);
+            }
         } else {
-            messages = messageRepository.findTop50BySessionIdOrderBySentAtDesc(sessionId);
+            if (before != null) {
+                messages = messageRepository
+                        .findTop50BySessionIdAndIsInternalFalseAndSentAtBeforeOrderBySentAtDesc(sessionId, before);
+            } else {
+                messages = messageRepository.findTop50BySessionIdAndIsInternalFalseOrderBySentAtDesc(sessionId);
+            }
         }
-        // Reverter pra ordem cronológica
         return messages.reversed().stream()
                 .map(MessageResponse::from)
                 .toList();
+    }
+
+    // Novo método para notas internas
+    @Transactional
+    public MessageResponse sendNote(UUID sessionId, UUID senderId, String content) {
+        ChatSession session = chatSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("ChatSession", sessionId));
+
+        if (!session.isActive()) {
+            throw new BusinessException("Chat session is closed");
+        }
+
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", senderId));
+
+        Message message = Message.builder()
+                .session(session)
+                .sender(sender)
+                .content(content)
+                .messageType(MessageType.NOTE)
+                .isInternal(true)
+                .build();
+
+        message = messageRepository.save(message);
+        return MessageResponse.from(message);
     }
 }

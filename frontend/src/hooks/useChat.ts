@@ -9,8 +9,10 @@ import {
 } from '@/api/chat'
 import {
   connectWebSocket,
+  subscribeToNotes,
   subscribeToSession,
   sendMessage as wsSendMessage,
+  sendNote as wsSendNote,
 } from '@/lib/websocket'
 import type { Message } from '@/types'
 import { getApiError } from '@/lib/error'
@@ -58,27 +60,26 @@ export function useEndChatSession() {
   }
 }
 
-export function useChatMessages(sessionId: string | undefined) {
+export function useChatMessages(sessionId: string | undefined, isAgent = false) {
   const token = useAuthStore((s) => s.accessToken)
+  const user = useAuthStore((s) => s.user)
   const [messages, setMessages] = useState<Message[]>([])
   const [connected, setConnected] = useState(false)
   const subscriptionRef = useRef<ReturnType<typeof subscribeToSession>>(null)
+  const notesSubRef = useRef<ReturnType<typeof subscribeToNotes>>(null)
 
-  // Carrega histórico via REST
   const historyQuery = useQuery({
-    queryKey: ['chat', 'messages', sessionId],
-    queryFn: () => getMessages(sessionId!),
+    queryKey: ['chat', 'messages', sessionId, isAgent],
+    queryFn: () => getMessages(sessionId!, 0, 50),
     enabled: !!sessionId,
   })
 
-  // Quando histórico carrega, seta como state inicial
   useEffect(() => {
     if (historyQuery.data?.content) {
       setMessages(historyQuery.data.content)
     }
   }, [historyQuery.data])
 
-  // Conecta WebSocket e subscribe no tópico
   useEffect(() => {
     if (!sessionId || !token) return
 
@@ -87,21 +88,27 @@ export function useChatMessages(sessionId: string | undefined) {
       () => {
         setConnected(true)
 
-        // O que faz: mensagem aparece instantaneamente com id temporário (temp-xxx). 
-        // Quando o broadcast do WebSocket chega com o id real, substitui a otimista. 
-        // Se o WebSocket falhar, a mensagem otimista fica na tela (mas não foi persistida).
         subscriptionRef.current = subscribeToSession(sessionId, (stompMessage) => {
           const newMessage: Message = JSON.parse(stompMessage.body)
           setMessages((prev) => {
-            // Remove mensagem otimista com mesmo conteúdo se existir
             const withoutOptimistic = prev.filter(
               (m) => !m.id.startsWith('temp-') || m.content !== newMessage.content
             )
-            // Evita duplicata
             if (withoutOptimistic.some((m) => m.id === newMessage.id)) return withoutOptimistic
             return [...withoutOptimistic, newMessage]
           })
         })
+
+        // Agentes também recebem notas internas
+        if (isAgent) {
+          notesSubRef.current = subscribeToNotes(sessionId, (stompMessage) => {
+            const note: Message = JSON.parse(stompMessage.body)
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === note.id)) return prev
+              return [...prev, note]
+            })
+          })
+        }
       },
       (error) => console.error('WebSocket error:', error)
     )
@@ -109,16 +116,15 @@ export function useChatMessages(sessionId: string | undefined) {
     return () => {
       subscriptionRef.current?.unsubscribe()
       subscriptionRef.current = null
+      notesSubRef.current?.unsubscribe()
+      notesSubRef.current = null
     }
-  }, [sessionId, token])
-
-  const user = useAuthStore((s) => s.user)
+  }, [sessionId, token, isAgent])
 
   const sendMessage = useCallback(
     (content: string) => {
       if (!sessionId || !connected) return
 
-      // Mensagem otimista
       const optimisticMessage: Message = {
         id: `temp-${Date.now()}`,
         sessionId,
@@ -127,10 +133,32 @@ export function useChatMessages(sessionId: string | undefined) {
         content,
         messageType: 'TEXT',
         sentAt: new Date().toISOString(),
+        isInternal: false,
       }
 
       setMessages((prev) => [...prev, optimisticMessage])
       wsSendMessage(sessionId, content)
+    },
+    [sessionId, connected, user]
+  )
+
+  const sendInternalNote = useCallback(
+    (content: string) => {
+      if (!sessionId || !connected) return
+
+      const optimisticNote: Message = {
+        id: `temp-note-${Date.now()}`,
+        sessionId,
+        senderId: user?.id ?? '',
+        senderName: user?.name ?? '',
+        content,
+        messageType: 'NOTE',
+        sentAt: new Date().toISOString(),
+        isInternal: true,
+      }
+
+      setMessages((prev) => [...prev, optimisticNote])
+      wsSendNote(sessionId, content)
     },
     [sessionId, connected, user]
   )
@@ -140,5 +168,6 @@ export function useChatMessages(sessionId: string | undefined) {
     connected,
     isLoading: historyQuery.isLoading,
     sendMessage,
+    sendInternalNote,
   }
 }

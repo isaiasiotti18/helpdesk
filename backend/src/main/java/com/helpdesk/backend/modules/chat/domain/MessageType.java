@@ -1,5 +1,5 @@
 package com.helpdesk.backend.modules.chat.domain;
 
 public enum MessageType {
-    TEXT, SYSTEM, FILE
+    TEXT, SYSTEM, FILE, NOTE
 }
