@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Outlet, NavLink } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useNotificationSocket } from '@/hooks/useNotificationSocket'
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary'
+import { NotificationBell } from '@/components/layout/NotificationBell'
+import { SearchBar } from '@/components/layout/SearchBar'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { ConfirmDialog } from '../ui/confirm-dialog'
@@ -31,9 +34,19 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <NavLink to="/tickets/new" className={linkClass} onClick={onNavigate}>
           Novo Ticket
         </NavLink>
+        {(user?.role === 'AGENT' || user?.role === 'ADMIN') && (
+          <NavLink to="/canned-responses" className={linkClass} onClick={onNavigate}>
+            Respostas Prontas
+          </NavLink>
+        )}
         {user?.role === 'ADMIN' && (
           <NavLink to="/categories" className={linkClass} onClick={onNavigate}>
             Categorias
+          </NavLink>
+        )}
+        {user?.role === 'ADMIN' && (
+          <NavLink to="/metrics" className={linkClass} onClick={onNavigate}>
+            Métricas
           </NavLink>
         )}
       </nav>
@@ -62,6 +75,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppLayout() {
   const [open, setOpen] = useState(false)
+  useNotificationSocket()
 
   return (
     <div className="flex h-screen">
@@ -73,6 +87,12 @@ export function AppLayout() {
       {/* Sidebar mobile */}
       <Sheet open={open} onOpenChange={setOpen}>
         <div className="flex flex-col flex-1">
+          {/* Header desktop */}
+          <header className="hidden md:flex items-center justify-between gap-4 px-6 py-3 border-b bg-card">
+            <SearchBar />
+            <NotificationBell />
+          </header>
+
           {/* Header mobile */}
           <header className="flex md:hidden items-center gap-3 p-4 border-b bg-card">
             <SheetTrigger
@@ -83,6 +103,9 @@ export function AppLayout() {
               }
             />
             <h1 className="text-lg font-bold">HelpDesk</h1>
+            <div className="flex-1" />
+            <SearchBar />
+            <NotificationBell />
           </header>
 
           <SheetContent side="left" className="w-64 p-0">
