@@ -15,26 +15,26 @@ import com.helpdesk.backend.modules.ticket.domain.TicketStatus;
 
 public interface TicketRepository extends JpaRepository<Ticket, UUID>, JpaSpecificationExecutor<Ticket> {
 
-    @EntityGraph(attributePaths = { "createdBy", "assignedAgent" })
+    @EntityGraph(attributePaths = { "createdBy", "assignedAgent", "category" })
     Page<Ticket> findByCreatedById(UUID userId, Pageable pageable);
 
-    @EntityGraph(attributePaths = { "createdBy", "assignedAgent" })
+    @EntityGraph(attributePaths = { "createdBy", "assignedAgent", "category" })
     Page<Ticket> findByAssignedAgentId(UUID agentId, Pageable pageable);
 
-    @EntityGraph(attributePaths = { "createdBy", "assignedAgent" })
+    @EntityGraph(attributePaths = { "createdBy", "assignedAgent", "category" })
     Page<Ticket> findByStatus(TicketStatus status, Pageable pageable);
 
-    @EntityGraph(attributePaths = { "createdBy", "assignedAgent" })
+    @EntityGraph(attributePaths = { "createdBy", "assignedAgent", "category" })
     Page<Ticket> findByPriority(Priority priority, Pageable pageable);
 
-    @EntityGraph(attributePaths = { "createdBy", "assignedAgent" })
+    @EntityGraph(attributePaths = { "createdBy", "assignedAgent", "category" })
     Page<Ticket> findByStatusAndPriority(TicketStatus status, Priority priority, Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = { "createdBy", "assignedAgent" })
+    @EntityGraph(attributePaths = { "createdBy", "assignedAgent", "category" })
     Page<Ticket> findAll(Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = { "createdBy", "assignedAgent" })
+    @EntityGraph(attributePaths = { "createdBy", "assignedAgent", "category" })
     Optional<Ticket> findById(UUID id);
 }

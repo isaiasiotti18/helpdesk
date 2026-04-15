@@ -25,6 +25,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.helpdesk.backend.modules.category.domain.Category;
 import com.helpdesk.backend.modules.user.domain.Role;
 import com.helpdesk.backend.modules.user.domain.User;
 import com.helpdesk.backend.shared.exception.BusinessException;
@@ -65,6 +66,10 @@ public class Ticket {
 
     @Column(name = "queue_id")
     private UUID queueId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @Version
     private Integer version;
@@ -124,6 +129,18 @@ public class Ticket {
         transitionTo(TicketStatus.TRANSFERRED);
         this.assignedAgent = newAgent;
         this.status = TicketStatus.IN_PROGRESS;
+    }
+
+    public void setAssignedAgent(User agent) {
+        this.assignedAgent = agent;
+    }
+
+    public void setQueueId(UUID queueId) {
+        this.queueId = queueId;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     public void softDelete() {

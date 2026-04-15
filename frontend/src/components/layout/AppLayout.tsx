@@ -31,6 +31,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <NavLink to="/tickets/new" className={linkClass} onClick={onNavigate}>
           Novo Ticket
         </NavLink>
+        {user?.role === 'ADMIN' && (
+          <NavLink to="/categories" className={linkClass} onClick={onNavigate}>
+            Categorias
+          </NavLink>
+        )}
       </nav>
 
       <div className="p-4 border-t">

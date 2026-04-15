@@ -6,6 +6,7 @@ export const createTicketSchema = z.object({
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT'], {
     required_error: 'Selecione a prioridade',
   }),
+  categoryId: z.string().optional(),
 })
 
 export type CreateTicketFormData = z.infer<typeof createTicketSchema>

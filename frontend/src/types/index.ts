@@ -23,10 +23,13 @@ export interface Ticket {
   description: string
   status: TicketStatus
   priority: Priority
+  createdById: string
   createdByName: string
   assignedAgentName: string | null
   createdAt: string
   closedAt: string | null
+  categoryId: string | null
+  categoryName: string | null
 }
 
 export type TicketStatus = 'OPEN' | 'IN_QUEUE' | 'IN_PROGRESS' | 'TRANSFERRED' | 'RESOLVED' | 'CLOSED'
@@ -56,4 +59,14 @@ export interface Page<T> {
   totalPages: number
   number: number
   size: number
+}
+
+export interface Category {
+  id: string
+  name: string
+  description: string | null
+  queueId: string | null
+  queueName: string | null
+  isActive: boolean
+  createdAt: string
 }

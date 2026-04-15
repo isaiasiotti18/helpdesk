@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CategorySelect } from '@/components/category/CategorySelect'
 
 const priorities = [
   { value: 'LOW', label: 'Baixa' },
@@ -58,6 +59,12 @@ export function CreateTicketPage() {
               <Label htmlFor="description">Descrição</Label>
               <Textarea id="description" rows={4} {...register('description')} />
             </div>
+
+            <CategorySelect
+              value={watch('categoryId') ?? ''}
+              onChange={(val) => setValue('categoryId', val)}
+              error={errors.categoryId?.message}
+            />
 
             <div className="space-y-2">
               <Label>Prioridade</Label>

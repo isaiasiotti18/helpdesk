@@ -6,6 +6,7 @@ import { TicketsPage } from '@/pages/TicketsPage'
 import { CreateTicketPage } from '@/pages/CreateTicketPage'
 import { TicketDetailPage } from '@/pages/TicketDetailPage'
 import { ChatPage } from '@/pages/ChatPage'
+import { CategoriesPage } from '@/pages/CategoriesPage'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
           { path: '/tickets/new', element: <CreateTicketPage /> },
           { path: '/tickets/:id', element: <TicketDetailPage /> },
           { path: '/chat/:ticketId', element: <ChatPage /> },
+          { path: '/categories', element: <CategoriesPage /> },
         ],
       },
     ],
