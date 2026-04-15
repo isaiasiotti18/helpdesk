@@ -85,6 +85,23 @@ public class Ticket {
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sla_policy_id")
+    private SlaPolicy slaPolicy;
+
+    @Column(name = "first_response_at")
+    private LocalDateTime firstResponseAt;
+
+    @Column(name = "sla_first_response_deadline")
+    private LocalDateTime slaFirstResponseDeadline;
+
+    @Column(name = "sla_resolution_deadline")
+    private LocalDateTime slaResolutionDeadline;
+
+    @Column(name = "sla_breached", nullable = false)
+    @Builder.Default
+    private Boolean slaBbreached = false;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
@@ -145,5 +162,29 @@ public class Ticket {
 
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
+    }
+
+    public void setSlaPolicy(SlaPolicy slaPolicy) {
+        this.slaPolicy = slaPolicy;
+    }
+
+    public void setFirstResponseAt(LocalDateTime firstResponseAt) {
+        this.firstResponseAt = firstResponseAt;
+    }
+
+    public void setSlaFirstResponseDeadline(LocalDateTime slaFirstResponseDeadline) {
+        this.slaFirstResponseDeadline = slaFirstResponseDeadline;
+    }
+
+    public void setSlaResolutionDeadline(LocalDateTime slaResolutionDeadline) {
+        this.slaResolutionDeadline = slaResolutionDeadline;
+    }
+
+    public void setSlaBbreached(Boolean slaBbreached) {
+        this.slaBbreached = slaBbreached;
+    }
+
+    public Boolean getSlaBbreached() {
+        return this.slaBbreached;
     }
 }

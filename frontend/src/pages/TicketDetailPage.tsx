@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { TicketTimeline } from '@/components/ticket/TicketTimeline'
+import { TransferDialog } from '@/components/ticket/TransferDialog'
+import { SlaIndicator } from '@/components/ticket/SlaIndicator'
+import { RatingWidget } from '@/components/ticket/RatingWidget'
+import { useAuthStore } from '@/stores/authStore'
 import { relativeDate } from '@/lib/date'
 
 export function TicketDetailPage() {
@@ -12,11 +17,15 @@ export function TicketDetailPage() {
   const navigate = useNavigate()
   const { data: ticket, isLoading } = useTicketDetail(id!)
   const closeTicketMutation = useCloseTicket()
+  const user = useAuthStore((s) => s.user)
+  const isAgent = user?.role === 'AGENT' || user?.role === 'ADMIN'
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Carregando...</div>
   if (!ticket) return <div className="p-6 text-muted-foreground">Ticket não encontrado.</div>
 
   const canClose = ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED'
+  const isClosed = ticket.status === 'CLOSED' || ticket.status === 'RESOLVED'
+  const isCreator = ticket.createdById === user?.id
 
   async function handleClose() {
     await closeTicketMutation.mutateAsync(ticket!.id)
@@ -28,9 +37,16 @@ export function TicketDetailPage() {
         <Button variant="outline" size="sm" onClick={() => navigate('/tickets')}>
           ← Voltar
         </Button>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap items-center justify-end">
           <PriorityBadge priority={ticket.priority} />
           <TicketStatusBadge status={ticket.status} />
+          <SlaIndicator
+            slaFirstResponseDeadline={ticket.slaFirstResponseDeadline}
+            slaResolutionDeadline={ticket.slaResolutionDeadline}
+            slaBbreached={ticket.slaBbreached}
+            firstResponseAt={ticket.firstResponseAt}
+            status={ticket.status}
+          />
         </div>
       </div>
 
@@ -54,6 +70,12 @@ export function TicketDetailPage() {
               <p className="text-muted-foreground">Agente</p>
               <p className="font-medium">{ticket.assignedAgentName ?? 'Não atribuído'}</p>
             </div>
+            {ticket.categoryName && (
+              <div>
+                <p className="text-muted-foreground">Categoria</p>
+                <p className="font-medium">{ticket.categoryName}</p>
+              </div>
+            )}
             <div>
               <p className="text-muted-foreground">Criado em</p>
               <p className="font-medium">{relativeDate(ticket.createdAt)}</p>
@@ -88,11 +110,28 @@ export function TicketDetailPage() {
                     Abrir Chat
                   </Button>
                 )}
+                {ticket.status === 'IN_PROGRESS' && isAgent && (
+                  <TransferDialog
+                    ticketId={ticket.id}
+                    queues={[]}
+                    agents={[]}
+                  />
+                )}
               </div>
             </>
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <h3 className="text-lg font-semibold">Atividades</h3>
+          <Separator />
+          <TicketTimeline ticketId={ticket.id} />
+        </CardContent>
+      </Card>
+
+      {isClosed && <RatingWidget ticketId={ticket.id} canRate={isCreator} />}
     </div>
   )
 }

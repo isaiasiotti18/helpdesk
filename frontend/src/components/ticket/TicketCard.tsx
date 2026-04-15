@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { TicketStatusBadge, PriorityBadge } from './TicketStatusBadge'
+import { SlaIndicator } from '@/components/ticket/SlaIndicator'
 import type { Ticket } from '@/types'
 import { relativeDate } from '@/lib/date'
 
@@ -20,6 +21,13 @@ export function TicketCard({ ticket }: TicketCardProps) {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h3 className="font-medium truncate">{ticket.title}</h3>
+
+            {ticket.categoryName && (
+              <span className="text-xs bg-muted px-2 py-0.5 rounded">
+                {ticket.categoryName}
+              </span>
+            )}
+
             <p className="text-sm text-muted-foreground mt-1">
               {ticket.createdByName}
               {ticket.assignedAgentName && ` → ${ticket.assignedAgentName}`}
@@ -29,6 +37,15 @@ export function TicketCard({ ticket }: TicketCardProps) {
             <PriorityBadge priority={ticket.priority} />
             <TicketStatusBadge status={ticket.status} />
           </div>
+        </div>
+        <div className="mt-2">
+          <SlaIndicator
+            slaFirstResponseDeadline={ticket.slaFirstResponseDeadline}
+            slaResolutionDeadline={ticket.slaResolutionDeadline}
+            slaBbreached={ticket.slaBbreached}
+            firstResponseAt={ticket.firstResponseAt}
+            status={ticket.status}
+          />
         </div>
         <p className="text-xs text-muted-foreground mt-2">
           {relativeDate(ticket.createdAt)}
