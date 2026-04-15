@@ -7,6 +7,8 @@ import { CreateTicketPage } from '@/pages/CreateTicketPage'
 import { TicketDetailPage } from '@/pages/TicketDetailPage'
 import { ChatPage } from '@/pages/ChatPage'
 import { CategoriesPage } from '@/pages/CategoriesPage'
+import { CannedResponsesPage } from '@/pages/CannedResponsesPage'
+import { MetricsDashboardPage } from '@/pages/MetricsDashboardPage'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 
@@ -30,7 +32,9 @@ export const router = createBrowserRouter([
           { path: '/tickets/new', element: <CreateTicketPage /> },
           { path: '/tickets/:id', element: <TicketDetailPage /> },
           { path: '/chat/:ticketId', element: <ChatPage /> },
+          { path: '/canned-responses', element: <CannedResponsesPage /> },
           { path: '/categories', element: <CategoriesPage /> },
+          { path: '/metrics', element: <MetricsDashboardPage /> },
         ],
       },
     ],

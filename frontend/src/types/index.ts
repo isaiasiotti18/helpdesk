@@ -30,6 +30,10 @@ export interface Ticket {
   closedAt: string | null
   categoryId: string | null
   categoryName: string | null
+  slaFirstResponseDeadline: string | null
+  slaResolutionDeadline: string | null
+  slaBbreached: boolean
+  firstResponseAt: string | null
 }
 
 export type TicketStatus = 'OPEN' | 'IN_QUEUE' | 'IN_PROGRESS' | 'TRANSFERRED' | 'RESOLVED' | 'CLOSED'
@@ -49,8 +53,9 @@ export interface Message {
   senderId: string
   senderName: string
   content: string
-  messageType: 'TEXT' | 'SYSTEM' | 'FILE'
+  messageType: 'TEXT' | 'SYSTEM' | 'FILE' | 'NOTE'
   sentAt: string
+  isInternal: boolean  // ← novo
 }
 
 export interface Page<T> {
@@ -70,3 +75,4 @@ export interface Category {
   isActive: boolean
   createdAt: string
 }
+
