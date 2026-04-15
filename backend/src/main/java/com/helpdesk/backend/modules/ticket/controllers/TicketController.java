@@ -1,4 +1,4 @@
-package com.helpdesk.backend.modules.ticket;
+package com.helpdesk.backend.modules.ticket.controllers;
 
 import java.util.UUID;
 
@@ -20,13 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.helpdesk.backend.modules.ticket.domain.Priority;
 import com.helpdesk.backend.modules.ticket.domain.TicketStatus;
-import com.helpdesk.backend.modules.ticket.dtos.AssignRequest;
-import com.helpdesk.backend.modules.ticket.dtos.CreateTicketRequest;
-import com.helpdesk.backend.modules.ticket.dtos.TicketResponse;
-import com.helpdesk.backend.modules.ticket.dtos.UpdateStatusRequest;
-import com.helpdesk.backend.modules.ticket.services.TicketAssignmentService;
-import com.helpdesk.backend.modules.ticket.services.TicketLifecycleService;
-import com.helpdesk.backend.modules.ticket.services.TicketService;
+import com.helpdesk.backend.modules.ticket.application.dtos.AssignRequest;
+import com.helpdesk.backend.modules.ticket.application.dtos.CreateTicketRequest;
+import com.helpdesk.backend.modules.ticket.application.dtos.TicketResponse;
+import com.helpdesk.backend.modules.ticket.application.dtos.UpdateStatusRequest;
+import com.helpdesk.backend.modules.ticket.application.services.TicketAssignmentService;
+import com.helpdesk.backend.modules.ticket.application.services.TicketLifecycleService;
+import com.helpdesk.backend.modules.ticket.application.services.TicketService;
 import com.helpdesk.backend.shared.dto.ApiResponse;
 import com.helpdesk.backend.shared.security.CurrentUser;
 
@@ -55,8 +55,9 @@ public class TicketController {
             @RequestParam(required = false) TicketStatus status,
             @RequestParam(required = false) Priority priority,
             @RequestParam(required = false) UUID agentId,
+            @RequestParam(required = false) UUID categoryId,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.ok(ticketService.list(status, priority, agentId, pageable)));
+        return ResponseEntity.ok(ApiResponse.ok(ticketService.list(status, priority, agentId, categoryId, pageable)));
     }
 
     @GetMapping("/my")

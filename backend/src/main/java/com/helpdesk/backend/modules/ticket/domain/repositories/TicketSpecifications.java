@@ -1,4 +1,4 @@
-package com.helpdesk.backend.modules.ticket.ra;
+package com.helpdesk.backend.modules.ticket.domain.repositories;
 
 import java.util.UUID;
 
@@ -35,11 +35,16 @@ public final class TicketSpecifications {
         return (root, query, cb) -> userId == null ? null : cb.equal(root.get("createdBy").get("id"), userId);
     }
 
+    public static Specification<Ticket> withCategory(UUID categoryId) {
+        return (root, query, cb) -> categoryId == null ? null : cb.equal(root.get("category").get("id"), categoryId);
+    }
+
     public static Specification<Ticket> fetchRelations() {
         return (root, query, cb) -> {
             if (Long.class != query.getResultType()) {
                 root.fetch("createdBy", JoinType.LEFT);
                 root.fetch("assignedAgent", JoinType.LEFT);
+                root.fetch("category", JoinType.LEFT);
             }
             return null;
         };

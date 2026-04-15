@@ -1,4 +1,4 @@
-package com.helpdesk.backend.modules.ticket.services;
+package com.helpdesk.backend.modules.ticket.application.services;
 
 import java.util.UUID;
 
@@ -12,7 +12,7 @@ import com.helpdesk.backend.modules.ticket.domain.Ticket;
 import com.helpdesk.backend.modules.ticket.domain.TicketStatus;
 import com.helpdesk.backend.modules.ticket.domain.event.TicketClosedEvent;
 import com.helpdesk.backend.modules.ticket.domain.repositories.TicketRepository;
-import com.helpdesk.backend.modules.ticket.dtos.TicketResponse;
+import com.helpdesk.backend.modules.ticket.application.dtos.TicketResponse;
 import com.helpdesk.backend.shared.exception.BusinessException;
 import com.helpdesk.backend.shared.exception.ResourceNotFoundException;
 

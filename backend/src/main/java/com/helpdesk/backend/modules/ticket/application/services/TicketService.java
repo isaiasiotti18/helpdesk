@@ -1,4 +1,4 @@
-package com.helpdesk.backend.modules.ticket.services;
+package com.helpdesk.backend.modules.ticket.application.services;
 
 import java.util.UUID;
 
@@ -11,6 +11,8 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.helpdesk.backend.modules.category.domain.Category;
+import com.helpdesk.backend.modules.category.domain.CategoryRepository;
 import com.helpdesk.backend.modules.ticket.domain.Priority;
 import com.helpdesk.backend.modules.ticket.domain.Ticket;
 import com.helpdesk.backend.modules.ticket.domain.TicketAssignment;
@@ -20,9 +22,9 @@ import com.helpdesk.backend.modules.ticket.domain.event.TicketClosedEvent;
 import com.helpdesk.backend.modules.ticket.domain.event.TicketCreatedEvent;
 import com.helpdesk.backend.modules.ticket.domain.repositories.TicketAssignmentRepository;
 import com.helpdesk.backend.modules.ticket.domain.repositories.TicketRepository;
-import com.helpdesk.backend.modules.ticket.dtos.CreateTicketRequest;
-import com.helpdesk.backend.modules.ticket.dtos.TicketResponse;
-import com.helpdesk.backend.modules.ticket.ra.TicketSpecifications;
+import com.helpdesk.backend.modules.ticket.domain.repositories.TicketSpecifications;
+import com.helpdesk.backend.modules.ticket.application.dtos.CreateTicketRequest;
+import com.helpdesk.backend.modules.ticket.application.dtos.TicketResponse;
 import com.helpdesk.backend.modules.user.domain.User;
 import com.helpdesk.backend.modules.user.domain.UserRepository;
 import com.helpdesk.backend.shared.exception.BusinessException;
@@ -38,6 +40,8 @@ public class TicketService {
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final TicketAssignmentRepository assignmentRepository;
+    private final CategoryRepository categoryRepository;
+    private final SlaService slaService;
 
     @Transactional
     public TicketResponse create(CreateTicketRequest request, UUID userId) {
@@ -47,6 +51,16 @@ public class TicketService {
         Priority priority = request.priority() != null ? request.priority() : Priority.MEDIUM;
 
         Ticket ticket = Ticket.create(request.title(), request.description(), priority, user);
+
+        if (request.categoryId() != null) {
+            Category category = categoryRepository.findById(UUID.fromString(request.categoryId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Category", request.categoryId()));
+            ticket.setCategory(category);
+        }
+
+        ticket = ticketRepository.save(ticket);
+
+        slaService.applySla(ticket);
         ticket = ticketRepository.save(ticket);
 
         eventPublisher.publishEvent(new TicketCreatedEvent(ticket.getId(), userId));
@@ -55,12 +69,14 @@ public class TicketService {
     }
 
     @Transactional(readOnly = true)
-    public Page<TicketResponse> list(TicketStatus status, Priority priority, UUID agentId, Pageable pageable) {
+    public Page<TicketResponse> list(TicketStatus status, Priority priority, UUID agentId, UUID categoryId,
+            Pageable pageable) {
         Specification<Ticket> spec = Specification
                 .where(TicketSpecifications.fetchRelations())
                 .and(TicketSpecifications.withStatus(status))
                 .and(TicketSpecifications.withPriority(priority))
-                .and(TicketSpecifications.withAssignedAgent(agentId));
+                .and(TicketSpecifications.withAssignedAgent(agentId))
+                .and(TicketSpecifications.withCategory(categoryId));
 
         return ticketRepository.findAll(spec, pageable).map(TicketResponse::from);
     }

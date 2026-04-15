@@ -1,4 +1,4 @@
-package com.helpdesk.backend.modules.ticket.services;
+package com.helpdesk.backend.modules.ticket.application.services;
 
 import java.util.UUID;
 
@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.helpdesk.backend.modules.ticket.domain.Ticket;
 import com.helpdesk.backend.modules.ticket.domain.event.TicketAssignedEvent;
 import com.helpdesk.backend.modules.ticket.domain.repositories.TicketRepository;
-import com.helpdesk.backend.modules.ticket.dtos.TicketResponse;
+import com.helpdesk.backend.modules.ticket.application.dtos.TicketResponse;
 import com.helpdesk.backend.modules.user.domain.User;
 import com.helpdesk.backend.modules.user.domain.UserRepository;
 import com.helpdesk.backend.shared.exception.BusinessException;
