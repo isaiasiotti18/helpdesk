@@ -1,0 +1,55 @@
+services:
+  # ── PostgreSQL ────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: helpdesk-db
+    environment:
+      POSTGRES_DB: helpdesk
+      POSTGRES_USER: helpdesk
+      POSTGRES_PASSWORD: helpdesk
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helpdesk"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── Backend (Spring Boot) ─────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: helpdesk-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/helpdesk
+      SPRING_DATASOURCE_USERNAME: helpdesk
+      SPRING_DATASOURCE_PASSWORD: helpdesk
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      APP_JWT_SECRET: ${JWT_SECRET:-change-this-to-a-secure-secret-with-at-least-32-characters}
+      APP_CORS_ALLOWED_ORIGINS: http://localhost,http://localhost:80
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Frontend (React + Nginx) ──────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: helpdesk-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
