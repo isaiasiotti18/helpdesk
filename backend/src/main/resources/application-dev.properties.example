@@ -1,0 +1,29 @@
+spring.application.name=backend
+
+# Datasource — ajuste para seu ambiente (pg local, Neon, etc.)
+spring.datasource.url=jdbc:postgresql://localhost:5432/helpdesk
+spring.datasource.username=helpdesk
+spring.datasource.password=helpdesk
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA (Flyway cuida do schema; validate é mais seguro que update)
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=true
+
+# Flyway
+spring.flyway.enabled=true
+
+# JWT — gere um segredo com >= 32 chars (ex: openssl rand -base64 48)
+app.jwt.secret=CHANGE-ME-to-a-secret-with-at-least-32-characters
+app.jwt.access-expiration=3600000
+app.jwt.refresh-expiration=604800000
+
+# CORS (Vite dev server)
+app.cors.allowed-origins=http://localhost:5173,http://localhost:5174
+
+# HikariCP
+spring.datasource.hikari.maximum-pool-size=5
+spring.datasource.hikari.connection-timeout=20000
+spring.datasource.hikari.idle-timeout=300000
+spring.datasource.hikari.max-lifetime=600000
+spring.datasource.hikari.minimum-idle=2
